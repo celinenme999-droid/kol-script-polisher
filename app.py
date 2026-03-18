@@ -16,6 +16,7 @@ from skills import skill_manager
 from skills.custom.kol_polishing.kol_skill import KOLPolishingSkill
 from ai_client import get_ai_client
 from data_loader import DataLoader
+from influencer_analyzer import InfluencerAnalyzer, detect_platform, format_analysis_result
 
 # 页面配置
 st.set_page_config(
@@ -182,6 +183,35 @@ with col2:
         placeholder="例如：https://www.xiaohongshu.com/user/...",
         help="支持小红书、抖音等平台"
     )
+
+# 达人主页分析
+if influencer_url:
+    platform = detect_platform(influencer_url)
+    if platform:
+        st.caption(f"🔗 检测到平台: {platform}")
+        
+        with st.expander("🔍 分析达人主页风格", expanded=False):
+            st.markdown("**方式1**: 粘贴达人主页简介/置顶笔记内容")
+            profile_text = st.text_area(
+                "粘贴达人主页简介或几篇笔记内容",
+                height=100,
+                key="profile_text_input",
+                help="从小红书/抖音达人主页复制简介和几条笔记内容"
+            )
+            
+            if st.button("分析达人风格", key="analyze_btn"):
+                if profile_text:
+                    analysis = InfluencerAnalyzer.analyze_from_text(profile_text)
+                    st.markdown("#### 📊 分析结果")
+                    st.markdown(format_analysis_result(analysis))
+                    
+                    if analysis.get("style_hints"):
+                        suggested_style = "; ".join(analysis["style_hints"])
+                        st.info(f"💡 建议风格描述: {suggested_style}")
+                else:
+                    st.warning("请先粘贴达人主页内容")
+    else:
+        st.warning("⚠️ 暂不支持该平台，支持: 小红书、抖音、微博、B站")
 
 # 历史脚本参考（关键：用于学习达人风格）
 st.markdown("#### 📝 历史脚本参考（用于学习达人风格）")
