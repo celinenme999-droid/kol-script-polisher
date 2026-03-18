@@ -15,6 +15,7 @@ import time
 from skills import skill_manager
 from skills.custom.kol_polishing.kol_skill import KOLPolishingSkill
 from ai_client import get_ai_client
+from data_loader import DataLoader
 
 # 页面配置
 st.set_page_config(
@@ -211,12 +212,37 @@ if reference_script or influencer_style:
 # 步骤3：产品Brief
 st.markdown('<div class="section-header">📋 步骤3：产品植入要求/Brief</div>', unsafe_allow_html=True)
 
+# 自动加载Brief
+auto_brief = DataLoader.get_brief(category)
+brief_filename = DataLoader.get_brief_filename(category)
+
+col1, col2 = st.columns([3, 1])
+with col1:
+    st.caption(f"📄 已加载Brief: {brief_filename}")
+with col2:
+    if st.button("🔄 刷新Brief", key="refresh_brief"):
+        st.rerun()
+
 brief = st.text_area(
-    "输入产品植入要求",
+    "产品植入要求（已自动加载对应垂类Brief，可编辑补充）",
+    value=auto_brief if auto_brief else "",
     placeholder="例如：\n1. 产品需要在视频前30秒出现\n2. 口播词要自然，不要生硬\n3. 需要展示产品使用场景\n4. 强调产品的核心卖点...",
     height=150,
     help="详细描述产品植入的具体要求和限制"
 )
+
+# 软性要求
+auto_soft_req = DataLoader.get_soft_requirements()
+soft_req_filename = DataLoader.get_requirements_filename()
+
+with st.expander("📝 软性要求（点击展开/编辑）", expanded=False):
+    st.caption(f"📄 已加载: {soft_req_filename}")
+    soft_requirements = st.text_area(
+        "软性要求",
+        value=auto_soft_req if auto_soft_req else "",
+        height=100,
+        key="soft_requirements_input"
+    )
 
 # 步骤4：修改设置
 st.markdown('<div class="section-header">⚙️ 步骤4：修改设置</div>', unsafe_allow_html=True)
@@ -277,7 +303,7 @@ if st.button("✨ 开始修改脚本", type="primary", use_container_width=True)
                     reference_script=reference_script if reference_script else None,
                     influencer_style=influencer_style if influencer_style else None,
                     brief=brief if brief else None,
-                    soft_requirements=None,
+                    soft_requirements=soft_requirements if 'soft_requirements' in dir() else None,
                     ai_client=ai_client
                 )
                 
